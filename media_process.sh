@@ -49,10 +49,10 @@ ${0} -t ~/Pictures -d ~/Pictures/MyDir -y 2018"
 }
 
 print_welcome_warning() {
-    echo -e "\n${text_yellow_b}*** WARNING! DO NOT IGNOGE! ***
+    echo -e "\n${text_yellow_b}*** WARNING! DO NOT IGNORE! ***
 ${text_yellow}This script is going to modify some directories and files in selected directory.
 Make sure you have a backup of all data that is going to be modified by this
-script. This is a early alpha version, so everuthing could happen, including
+script. This is a early alpha version, so everything could happen, including
 all critical data lost.${text_normal}
 "
     read -n 1 -s -r -p "Press any key to continue or Ctrl+C to exit
@@ -63,13 +63,15 @@ fix_media_dir_names() {
     search_directory="${1}"
 
     echo -e "${text_purple}Fix directory names${text_normal}"
-    find ${search_directory} -maxdepth 1 -type d -print0 | sort | \
-    while IFS= read -r -d $'\0' dir; do
-        new_dir=$(echo "${dir}" | sed "s|\[||g" | sed "s|\]||g" | sed "s|)||g" | sed "s|(||g" | sed "s|+|_|g" | sed "s| |_|g" | sed "s|'|_|g" | sed "s|#|_|g" | sed "s|,|_|g" | sed "s|!|_|g")
-        if [ "${dir}" != "${new_dir}" ]; then
-            echo -e "${text_white_b}RENAME:${text_normal} ${dir} -> ${text_yellow}${new_dir}${text_normal}"
-            mv "${dir}" "${new_dir}"
-        fi
+    for i in $(seq 1 $(find ${search_directory} -type d | sed 's|[^/]||g' | sort | tail -n1 | awk '{ print length }')); do
+        find ${search_directory} -maxdepth ${i} -type d -print0 | sort -z | \
+        while IFS= read -r -d $'\0' dir; do
+            new_dir=$(echo "${dir}" | sed "s|\[||g" | sed "s|\]||g" | sed "s|)||g" | sed "s|(||g" | sed "s|+|_|g" | sed "s| |_|g" | sed "s|'|_|g" | sed "s|#|_|g" | sed "s|,|_|g" | sed "s|!|_|g")
+            if [ "${dir}" != "${new_dir}" ]; then
+                echo -e "${text_white_b}RENAME:${text_normal} ${dir} -> ${text_yellow}${new_dir}${text_normal}"
+                mv "${dir}" "${new_dir}" > /dev/null 2>&1
+            fi
+        done
     done
 }
 
@@ -91,12 +93,12 @@ fix_media_file_names() {
         -o -iname '*.m2ts' \
         -o -iname '*.mpeg' \
         -o -iname '*.vob' \
-    \) -print0 | sort | \
+    \) -print0 | sort -z | \
     while IFS= read -r -d $'\0' file; do
         new_file=$(echo "${file}" | sed "s|\[||g" | sed "s|\]||g" | sed "s|)||g" | sed "s|(||g" | sed "s|+|_|g" | sed "s| |_|g" | sed "s|'|_|g" | sed "s|#|_|g" | sed "s|,|_|g" | sed "s|!|_|g")
         if [ "${file}" != "${new_file}" ]; then
             echo -e "${text_white_b}RENAME:${text_normal} ${file} -> ${text_yellow}${new_file}${text_normal}"
-            mv "${file}" "${new_file}"
+            mv "${file}" "${new_file}" > /dev/null 2>&1
         fi
     done
 }
@@ -188,15 +190,27 @@ normalize_media_file() {
     id=0
 
     if [ "${new_file_name}" != "${file_name}" ]; then
-        # Check uniq name
-        while [ -a ${file_dir}/${new_file_name} ]; do
-            ((id++))
+        new_file_name="${prefix}_${year}${month}${day}_${hour}${minute}${second}_$(printf "%03d" ${id}).${file_extension}"
 
-            new_file_name="${prefix}_${year}${month}${day}_${hour}${minute}${second}_$(printf "%03d" ${id}).${file_extension}"
+        while [ -a ${file_dir}/${new_file_name} ]; do
+            if [ "${new_file_name}" != "${file_name}" ]; then
+                # Check uniq name
+                ((id++))
+
+                new_file_name="${prefix}_${year}${month}${day}_${hour}${minute}${second}_$(printf "%03d" ${id}).${file_extension}"
+            else
+                break
+            fi
         done
 
-        mv -f ${full_path_to_file} ${file_dir}/${new_file_name}
+        mv ${full_path_to_file} ${file_dir}/${new_file_name} > /dev/null 2>&1
     fi
+
+    # if [ "${file_extension}" == "jpg" ]; then
+    #     convert -interlace Plane -gaussian-blur 0.05 -quality 85% \
+    #     ${full_path_to_file} \
+    #     ${file_dir}/${new_file_name} > /dev/null 2>&1
+    # fi
 
     new_date="${year}:${month}:${day} ${hour}:${minute}:${second}"
     exiftool \
@@ -207,6 +221,7 @@ normalize_media_file() {
     -TrackModifyDate="${new_date}" \
     -MediaCreateDate="${new_date}" \
     -MediaModifyDate="${new_date}" \
+    -Label= -Subject= -Keywords= \
     ${file_dir}/${new_file_name} > /dev/null 2>&1 &
     chmod 664 ${file_dir}/${new_file_name}
 
@@ -251,15 +266,27 @@ manually_normalize_media_file() {
     id=0
 
     if [ "${new_file_name}" != "${file_name}" ]; then
-        # Check uniq name
-        while [ -a ${file_dir}/${new_file_name} ]; do
-            ((id++))
+        new_file_name="${prefix}_${year}${month}${day}_${hour}${minute}${second}_$(printf "%03d" ${id}).${file_extension}"
 
-            new_file_name="${prefix}_${year}${month}${day}_${hour}${minute}${second}_$(printf "%03d" ${id}).${file_extension}"
+        while [ -a ${file_dir}/${new_file_name} ]; do
+            if [ "${new_file_name}" != "${file_name}" ]; then
+                # Check uniq name
+                ((id++))
+
+                new_file_name="${prefix}_${year}${month}${day}_${hour}${minute}${second}_$(printf "%03d" ${id}).${file_extension}"
+            else
+                break
+            fi
         done
 
-        mv -f ${full_path_to_file} ${file_dir}/${new_file_name}
+        mv ${full_path_to_file} ${file_dir}/${new_file_name} > /dev/null 2>&1
     fi
+
+    # if [ "${file_extension}" == "jpg" ]; then
+    #     convert -interlace Plane -gaussian-blur 0.05 -quality 85% \
+    #     ${full_path_to_file} \
+    #     ${file_dir}/${new_file_name} > /dev/null 2>&1
+    # fi
 
     new_date="${year}:${month}:${day} ${hour}:${minute}:${second}"
     exiftool \
@@ -270,6 +297,8 @@ manually_normalize_media_file() {
     -TrackModifyDate="${new_date}" \
     -MediaCreateDate="${new_date}" \
     -MediaModifyDate="${new_date}" \
+    -DateTimeOriginal="${new_date}" \
+    -Label= -Subject= -Keywords= \
     ${file_dir}/${new_file_name} > /dev/null 2>&1 &
     chmod 664 ${file_dir}/${new_file_name}
 
@@ -287,6 +316,10 @@ fix_undone_files() {
 
     echo -en "${text_white_b}MANUAL:${text_normal} [${text_blue}$(printf "%3d%%" ${PERCENTAGE})${text_normal}] Enter date (YYYY.MM.DD) for ${directory}: "
     read response < /dev/tty
+
+    if [ ! "${response}" ]; then
+        return 0
+    fi
 
     while read file; do
         ((files_processed_undone++))
@@ -334,7 +367,7 @@ normalize_media_files() {
         -o -iname '*.m2ts' \
         -o -iname '*.mpeg' \
         -o -iname '*.vob' \
-    \) -print0 | sort | \
+    \) -print0 | sort -z | \
     while IFS= read -r -d $'\0' file; do
         ((files_processed++))
         PERCENTAGE=$((files_processed * 100 / total_files))
@@ -349,7 +382,7 @@ normalize_media_files() {
     echo -e "${text_purple}Normalize skipped media files${text_normal}"
     find ${search_directory} -type f \( \
         -iname 'undone.txt' \
-    \) -print0 | sort | \
+    \) -print0 | sort -z | \
     while IFS= read -r -d $'\0' file; do
         ((files_processed++))
         PERCENTAGE=$((files_processed * 100 / total_files))
@@ -436,7 +469,7 @@ copy_media_files() {
         -o -iname '*.m2ts' \
         -o -iname '*.mpeg' \
         -o -iname '*.vob' \
-    \) -print0 | sort | \
+    \) -print0 | sort -z | \
     while IFS= read -r -d $'\0' file; do
         ((files_processed++))
         PERCENTAGE=$((files_processed * 100 / total_files))
