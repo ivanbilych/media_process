@@ -190,7 +190,7 @@ normalize_media_file() {
     id=0
 
     if [ "${new_file_name}" != "${file_name}" ]; then
-        new_file_name="${prefix}_${year}${month}${day}_${hour}${minute}${second}_$(printf "%03d" ${id}).${file_extension}"
+        new_file_name="${prefix}_${year}${month}${day}_${hour}${minute}${second}.${file_extension}"
 
         while [ -a ${file_dir}/${new_file_name} ]; do
             if [ "${new_file_name}" != "${file_name}" ]; then
@@ -266,7 +266,7 @@ manually_normalize_media_file() {
     id=0
 
     if [ "${new_file_name}" != "${file_name}" ]; then
-        new_file_name="${prefix}_${year}${month}${day}_${hour}${minute}${second}_$(printf "%03d" ${id}).${file_extension}"
+        new_file_name="${prefix}_${year}${month}${day}_${hour}${minute}${second}.${file_extension}"
 
         while [ -a ${file_dir}/${new_file_name} ]; do
             if [ "${new_file_name}" != "${file_name}" ]; then
