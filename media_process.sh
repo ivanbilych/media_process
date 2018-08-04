@@ -212,6 +212,22 @@ normalize_media_file() {
     #     ${file_dir}/${new_file_name} > /dev/null 2>&1
     # fi
 
+    # if [ "${file_extension}" == "avi" ] ||
+    #    [ "${file_extension}" == "flv" ] ||
+    #    [ "${file_extension}" == "m2ts" ] ||
+    #    [ "${file_extension}" == "mpeg" ] ||
+    #    [ "${file_extension}" == "vob" ] ||
+    #    [ "${file_extension}" == "mov" ] ||
+    #    [ "${file_extension}" == "3gp" ] ||
+    #    [ "${file_extension}" == "mts" ] ||
+    #    [ "${file_extension}" == "mod" ] ; then
+    #     ffmpeg -i ${file_dir}/${new_file_name} ${file_dir}/${full_path_to_file:: -3}mp4 > /dev/null 2>&1
+    #     rm ${file_dir}/${new_file_name}
+
+    #     file_extension="mp4"
+    #     new_file_name="${prefix}_${year}${month}${day}_${hour}${minute}${second}.${file_extension}"
+    # fi
+
     new_date="${year}:${month}:${day} ${hour}:${minute}:${second}"
     exiftool \
     -overwrite_original \
@@ -286,6 +302,22 @@ manually_normalize_media_file() {
     #     convert -interlace Plane -gaussian-blur 0.05 -quality 85% \
     #     ${full_path_to_file} \
     #     ${file_dir}/${new_file_name} > /dev/null 2>&1
+    # fi
+
+    # if [ "${file_extension}" == "avi" ] ||
+    #    [ "${file_extension}" == "flv" ] ||
+    #    [ "${file_extension}" == "m2ts" ] ||
+    #    [ "${file_extension}" == "mpeg" ] ||
+    #    [ "${file_extension}" == "vob" ] ||
+    #    [ "${file_extension}" == "mov" ] ||
+    #    [ "${file_extension}" == "3gp" ] ||
+    #    [ "${file_extension}" == "mts" ] ||
+    #    [ "${file_extension}" == "mod" ] ; then
+    #     ffmpeg -i ${file_dir}/${new_file_name} ${file_dir}/${full_path_to_file:: -3}mp4 > /dev/null 2>&1
+    #     rm ${file_dir}/${new_file_name}
+
+    #     file_extension="mp4"
+    #     new_file_name="${prefix}_${year}${month}${day}_${hour}${minute}${second}.${file_extension}"
     # fi
 
     new_date="${year}:${month}:${day} ${hour}:${minute}:${second}"
